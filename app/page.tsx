@@ -18,7 +18,7 @@ function readStoredEasyView(): boolean | null {
     if (raw === "0" || raw === "false") return false;
     if (raw === "1" || raw === "true") return true;
   } catch {
-    /*  private mode / unavailable */
+    /* private mode / unavailable */
   }
   return null;
 }

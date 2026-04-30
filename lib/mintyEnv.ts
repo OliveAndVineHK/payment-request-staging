@@ -48,7 +48,6 @@ export function resolveMintyModuleUrl(): string {
     case "staging":
       return (
         process.env.NEXT_PUBLIC_MODULE1_URL_STAGING?.trim() || DEFAULT_STAGING_URL
-
       );
     case "production":
     case "prod":

@@ -57,6 +57,8 @@ export type PaymentRequestDetailedInfoProps = {
   editInCardHeader?: boolean;
   /** Renders to the right of the Contact control (same row as the picker / read-only value). */
   contactHeaderEnd?: ReactNode;
+  /** Static-view-only outstanding balance. Hidden when editing. */
+  unpaidAmount?: string;
 };
 
 /** Shared with easy-view draft detailed card so labels match the detail page. */
@@ -162,18 +164,21 @@ export function PaymentRequestReadOnlyAmountRow({
   currencyDisplayLabel,
   amount,
   highlightError = false,
+  tone = "default",
 }: {
   currencyDisplayLabel: string;
   amount: string;
   highlightError?: boolean;
+  tone?: "default" | "secondary";
 }) {
+  const amountColorClass = tone === "secondary" ? "text-secondary" : "text-black";
   return (
     <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:gap-0">
       <div className="box-border flex h-11 min-h-[44px] w-full shrink-0 items-center justify-between gap-2 rounded-lg bg-transparent px-2 pl-3 pr-2 text-base font-semibold text-black sm:w-24 sm:rounded-l-lg sm:rounded-r-none sm:px-3 sm:text-sm" aria-label="Currency">
         <span className="min-w-0 flex-1 truncate">{currencyDisplayLabel}</span>
       </div>
       <div
-        className={`box-border flex min-h-[52px] min-w-0 w-full items-center rounded-lg bg-transparent px-3 py-1 text-xl font-semibold tabular-nums text-black sm:min-h-14 sm:flex-1 sm:rounded-l-none sm:rounded-r-lg sm:text-2xl sm:leading-snug ${highlightError ? "ring-2 ring-inset ring-red-500" : ""}`}
+        className={`box-border flex min-h-[52px] min-w-0 w-full items-center rounded-lg bg-transparent px-3 py-1 text-xl font-semibold tabular-nums ${amountColorClass} sm:min-h-14 sm:flex-1 sm:rounded-l-none sm:rounded-r-lg sm:text-2xl sm:leading-snug ${highlightError ? "ring-2 ring-inset ring-red-500" : ""}`}
         aria-readonly="true"
       >
         <span className="min-w-0 flex-1 truncate">{amount || "—"}</span>
@@ -219,6 +224,7 @@ export function PaymentRequestDetailedInfo({
   onRefetchEntityBillContacts,
   editInCardHeader = true,
   contactHeaderEnd,
+  unpaidAmount,
 }: PaymentRequestDetailedInfoProps) {
   const {
     billNo,
@@ -381,55 +387,64 @@ export function PaymentRequestDetailedInfo({
           </div>
         </div>
 
-        <div>
-          <FieldLabel htmlFor={idAmount} editing={isEditing}>
-            Amount<span className="text-red-500"> *</span>
-          </FieldLabel>
-          {isEditing ? (
-            <>
-              <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:gap-0">
-                <ThemedSelect
-                  id={idCurrency}
-                  ariaLabel="Currency"
-                  value={currencyModalValue ?? ""}
-                  onChange={(v) => patch({ currencyCode: modalCurrencyToIsoCode(v) })}
-                  options={currencyOptions}
-                  className="w-full shrink-0 sm:w-24"
-                  fullWidth
-                  uniformFill
-                  error={!!amountError}
-                  triggerClassName={
-                    amountError
-                      ? "w-full px-2 sm:px-3 rounded-2xl sm:rounded-l-2xl sm:rounded-r-none sm:border-r-0 border-red-500 bg-white text-black hover:bg-white focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-200/50"
-                      : "w-full px-2 sm:px-3 rounded-2xl sm:rounded-l-2xl sm:rounded-r-none sm:border-r-0 bg-white text-black hover:bg-white"
-                  }
-                  disabled={disabled}
-                />
-                <input
-                  id={idAmount}
-                  type="text"
-                  inputMode="decimal"
-                  value={amount ?? ""}
-                  onChange={(e) => patch({ amount: e.target.value })}
-                  aria-invalid={!!amountError}
-                  aria-describedby={amountError ? idAmountError : undefined}
-                  className={
-                    amountError
-                      ? `${paymentRequestDetailAmountValueInputClass} border-red-500 focus:border-red-500 focus:ring-red-200/50`
-                      : paymentRequestDetailAmountValueInputClass
-                  }
-                  disabled={disabled}
-                />
-              </div>
-              {amountError ? (
-                <p id={idAmountError} className="mt-1 text-xs text-red-600" role="alert">
-                  {amountError}
-                </p>
-              ) : null}
-            </>
-          ) : (
-            <PaymentRequestReadOnlyAmountRow currencyDisplayLabel={currencyDisplayLabel} amount={amount} highlightError={!!amountError} />
-          )}
+        <div className={!isEditing && unpaidAmount != null ? "grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-4" : undefined}>
+          <div>
+            <FieldLabel htmlFor={idAmount} editing={isEditing}>
+              Amount<span className="text-red-500"> *</span>
+            </FieldLabel>
+            {isEditing ? (
+              <>
+                <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:gap-0">
+                  <ThemedSelect
+                    id={idCurrency}
+                    ariaLabel="Currency"
+                    value={currencyModalValue ?? ""}
+                    onChange={(v) => patch({ currencyCode: modalCurrencyToIsoCode(v) })}
+                    options={currencyOptions}
+                    className="w-full shrink-0 sm:w-24"
+                    fullWidth
+                    uniformFill
+                    error={!!amountError}
+                    triggerClassName={
+                      amountError
+                        ? "w-full px-2 sm:px-3 rounded-2xl sm:rounded-l-2xl sm:rounded-r-none sm:border-r-0 border-red-500 bg-white text-black hover:bg-white focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-200/50"
+                        : "w-full px-2 sm:px-3 rounded-2xl sm:rounded-l-2xl sm:rounded-r-none sm:border-r-0 bg-white text-black hover:bg-white"
+                    }
+                    disabled={disabled}
+                  />
+                  <input
+                    id={idAmount}
+                    type="text"
+                    inputMode="decimal"
+                    value={amount ?? ""}
+                    onChange={(e) => patch({ amount: e.target.value })}
+                    aria-invalid={!!amountError}
+                    aria-describedby={amountError ? idAmountError : undefined}
+                    className={
+                      amountError
+                        ? `${paymentRequestDetailAmountValueInputClass} border-red-500 focus:border-red-500 focus:ring-red-200/50`
+                        : paymentRequestDetailAmountValueInputClass
+                    }
+                    disabled={disabled}
+                  />
+                </div>
+                {amountError ? (
+                  <p id={idAmountError} className="mt-1 text-xs text-red-600" role="alert">
+                    {amountError}
+                  </p>
+                ) : null}
+              </>
+            ) : (
+              <PaymentRequestReadOnlyAmountRow currencyDisplayLabel={currencyDisplayLabel} amount={amount} highlightError={!!amountError} />
+            )}
+          </div>
+
+          {!isEditing && unpaidAmount != null ? (
+            <div>
+              <FieldLabel editing={false}>Unpaid Amount</FieldLabel>
+              <PaymentRequestReadOnlyAmountRow currencyDisplayLabel={currencyDisplayLabel} amount={unpaidAmount} tone="secondary" />
+            </div>
+          ) : null}
         </div>
 
         <div>

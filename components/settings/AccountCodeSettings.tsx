@@ -6,6 +6,18 @@ import { useUserRole } from "@/lib/useUserRole";
 
 const CHECKBOX_CLASS = "checkbox-secondary-white-tick h-4 w-4 shrink-0 rounded border border-primary/40 disabled:opacity-40";
 
+const ALLOWED_ACCOUNT_TYPES = new Set([
+  "CURRENTLIAB",
+  "DIRECTCOSTS",
+  "EXPENSE",
+  "FIXED",
+  "INVENTORY",
+  "LIABILITY",
+  "OVERHEADS",
+  "PREPAYMENT",
+  "TERMLIAB",
+]);
+
 export type AccountCodeRow = { id: string; label: string };
 
 export function AccountCodeSettings() {
@@ -28,13 +40,16 @@ export function AccountCodeSettings() {
     fetchEntityBillAccounts({ forceChartSync: true, includeInactive: true })
       .then((accounts) => {
         if (cancelled) return;
+        const filteredAccounts = accounts.filter((a) =>
+          ALLOWED_ACCOUNT_TYPES.has((a.account_type || "").toUpperCase()),
+        );
         setRows(
-          accounts.map((a) => ({
+          filteredAccounts.map((a) => ({
             id: a.id,
             label: `${a.account_code} - ${a.account_name}`,
           })),
         );
-        const activeIds = new Set(accounts.filter((a) => a.is_active).map((a) => a.id));
+        const activeIds = new Set(filteredAccounts.filter((a) => a.is_active).map((a) => a.id));
         setSelectedIds(activeIds);
         setSavedIds(activeIds);
       })

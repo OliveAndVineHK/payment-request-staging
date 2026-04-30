@@ -30,7 +30,7 @@ const pillClass = (isActive: boolean) =>
   }`;
 
 /**
- * Tabs that redirect to Flask Module 1 rather than staying in this Next.js app.
+ * Tabs  that redirect to Flask Module 1 rather than staying in this Next.js app.
  * The URL builder receives the entityId stored in the billing auth cookie.
  */
 const FLASK_REDIRECT_TABS: Partial<
